@@ -1,6 +1,8 @@
-import { NextAuthOptions } from "next-auth"
+import { NextAuthOptions } from "next-auth";
 import GoogleProvider from "next-auth/providers/google";
+import axios from "axios";
 
+const BACKEND_URI = process.env.BACKEND_URI!;
 export const authOptions: NextAuthOptions = {
   providers: [
     GoogleProvider({
@@ -8,23 +10,51 @@ export const authOptions: NextAuthOptions = {
       clientSecret: process.env.GOOGLE_CLIENT_SECRET!,
     }),
   ],
-  // Add your callbacks here exactly as before
   callbacks: {
-      async jwt({ token, account }) {
-          console.log("callback jwt is waked");
-          console.log("token: ", token);
-          console.log("account: ", account);
-      if (account) {
-        token.idToken = account.id_token
+    async signIn({ user, account }) {
+      if (account?.provider === "google") {
+        const { access_token, id_token } = account;
+
+        try {
+          const response = await axios.post(
+            `${BACKEND_URI}/api/social/login/google/`,
+            {
+              access_token: access_token,
+              id_token: id_token,
+            }
+          );
+
+          console.log("this is response from the backend: ", response);
+          const backendAccessToken = response.data.access_token || response.data.key;
+
+          if (backendAccessToken) {
+            user.accessToken = backendAccessToken;
+            return true;
+          }
+          return false;
+        } catch (error) {
+          console.error("Backend login error:", error);
+          return false;
+        }
       }
-      return token
+      return true;
     },
-      async session({ session, token }) {
-        console.log("session is: ", session);
-        console.log("token is: ", token);
-      // @ts-ignore
-      session.idToken = token.idToken
-      return session
-    }
-  }
-}
+
+    async jwt({ token, user, account }) {
+      if (user) {
+        token.accessToken = user.accessToken;
+      }
+      if (account) {
+        token.idToken = account.id_token;
+      }
+      return token;
+    },
+
+    async session({ session, token }) {
+      session.accessToken = token.accessToken;
+      session.idToken = token.idToken;
+
+      return session;
+    },
+  },
+};

@@ -1,10 +1,18 @@
-import LoginBtn from "@/components/login-btn";
-export default function Home() {
+// import LoginBtn from "@/components/auth/login-btn";
+// export default function Home() {
+//   return (
+//     <main style={{ padding: "2rem" }}>
+//       <LoginBtn />
+//     </main>
+//   )
+// }
+
+import React from 'react'
+
+function page() {
   return (
-    <main style={{ padding: "2rem" }}>
-      <h1>Welcome to my App</h1>
-      <p>Please log in below:</p>
-      <LoginBtn />
-    </main>
+    <div className="text-yellow-400">page</div>
   )
 }
+
+export default page
