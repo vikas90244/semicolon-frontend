@@ -2,26 +2,53 @@
 
 import { useState } from "react";
 import {FaFileUpload} from "react-icons/fa";
+import {createUploadResource} from "@/components/upload/upload";
+import {createResourceResponse, resourceOptions, FileMetadataType} from "@/components/upload/type";
+import { handleApiError } from "@/lib/api/handleApirError";
 
-interface FileMetadataType {
-    fileName: string;
-    fileSize: number;
-};
+
 export default function FileUpload() {
 
     const [fileMetadata, setFileMetadata] = useState<FileMetadataType | null>(null);
-
+    const [file, setFile] = useState<File|null>(null);
     function handleFileChange(
         e: React.ChangeEvent<HTMLInputElement>
     ) {
-        const file = e.target.files?.[0];
 
-        if (file) {
+
+        const selectedFile = e.target.files?.[0] ?? null;
+        setFile(selectedFile);
+
+        if (selectedFile) {
             setFileMetadata({
-                fileName: file.name,
-                fileSize: file.size,
-            })
+                fileName: selectedFile.name,
+                fileSize: selectedFile.size,
+            });
+        } else {
+            setFileMetadata(null);
+        }
+    }
 
+
+    // function to handle file upload click
+    async function handleFileUpload(){
+        const totalbyte = file?.size.toString() ?? "0";
+        const chunksize = 2* 1024 * 1024;
+        const totalchunks = Number(totalbyte)/chunksize;
+        const filename = file?.name ?? "";
+
+        const options:resourceOptions = {
+            filename: filename,
+            totalbyte: totalbyte,
+            totalchunks:totalchunks,
+            chunksize: chunksize,
+        }
+
+        try {
+            const data: createResourceResponse= await createUploadResource(options);
+
+        } catch (error) {
+            handleApiError(error)
         }
     }
 
@@ -95,7 +122,7 @@ export default function FileUpload() {
                     >
                         📄
                         <span className="truncate">{fileMetadata.fileName}</span>
-                        <span className="text-sm text-rose-400">{((fileMetadata.fileSize)/(1024*1024)).toFixed(2)}MB</span>
+                        <span className="text-sm text-rose-400">{((fileMetadata.fileSize)/(1000*1000)).toFixed(1)} MB</span>
                     </div>
 
 
@@ -113,6 +140,7 @@ export default function FileUpload() {
                        hover:opacity-90
                        active:scale-[0.98]
                        transition"
+                        onClick={handleFileUpload}
                     >
                         Upload Now
                     </button>

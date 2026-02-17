@@ -1,8 +1,8 @@
 import { NextAuthOptions } from "next-auth";
 import GoogleProvider from "next-auth/providers/google";
 import axios from "axios";
+import { BACKEND_URI } from "./uri";
 
-const BACKEND_URI = process.env.BACKEND_URI!;
 export const authOptions: NextAuthOptions = {
   providers: [
     GoogleProvider({
@@ -11,49 +11,37 @@ export const authOptions: NextAuthOptions = {
     }),
   ],
   callbacks: {
-    async signIn({ user, account }) {
-      if (account?.provider === "google") {
-        const { access_token, id_token } = account;
+    async signIn({ account }) {
+      return account?.provider === "google"; 
+    },
 
+    async jwt({ token, account }) {
+      if (account?.provider === "google") {
         try {
           const response = await axios.post(
             `${BACKEND_URI}/api/social/login/google/`,
             {
-              access_token: access_token,
-              id_token: id_token,
+              access_token: account.access_token,
+              id_token: account.id_token,
             }
           );
 
-          console.log("this is response from the backend: ", response);
-          const backendAccessToken = response.data.access_token || response.data.key;
+          console.log("Django Auth Response: ", response.data);
+          
+          const backendAccessToken = response.data.access_token || response.data.access;
 
           if (backendAccessToken) {
-            user.accessToken = backendAccessToken;
-            return true;
+            token.accessToken = backendAccessToken;
           }
-          return false;
         } catch (error) {
-          console.error("Backend login error:", error);
-          return false;
+          console.error("Failed to exchange token with Django:", error);
         }
-      }
-      return true;
-    },
-
-    async jwt({ token, user, account }) {
-      if (user) {
-        token.accessToken = user.accessToken;
-      }
-      if (account) {
-        token.idToken = account.id_token;
       }
       return token;
     },
 
     async session({ session, token }) {
-      session.accessToken = token.accessToken;
-      session.idToken = token.idToken;
-
+      session.accessToken = token.accessToken as string;
       return session;
     },
   },

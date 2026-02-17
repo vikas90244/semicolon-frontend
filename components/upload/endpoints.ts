@@ -1,0 +1,1 @@
+export const CREATE_RESOURCE = "api/upload/init";
