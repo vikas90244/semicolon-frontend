@@ -1,7 +1,7 @@
 import { getServerSession } from "next-auth";
 import { redirect } from "next/navigation";
 import { authOptions } from '@/lib/auth';
-import FileUpload from "@/components/File/FileInput";
+import FileUpload from "@/components/upload/FileInput";
 async function page() {
      const session = await getServerSession(authOptions);
      console.log("session in home page: ", session);

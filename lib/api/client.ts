@@ -5,19 +5,19 @@ import { ApiException } from "./exception";
 
 
 export async function apiClient<T> (
-    path:string,
+    URL:string,
     options?:RequestInit
 ): Promise<T> {
 
     const session = await getSession();
     const token = session?.accessToken;
 
-    const res = await fetch(`${BACKEND_URI}/${path}`, {
+    const res = await fetch(`${URL}`, {
         ...options,
         headers: {
-            "Content-Type":"application/json",
-            ...(token? {Authorization: `Bearer ${token}`}:{}),
             ...(options?.headers||{}),
+            ...(token? {Authorization: `Bearer ${token}`}:{}),
+            ...(options?.body instanceof Blob ? {}: {"Content-Type":"application/json"}),
         }
     })
 

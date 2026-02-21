@@ -2,9 +2,10 @@
 
 import { useState } from "react";
 import {FaFileUpload} from "react-icons/fa";
-import {createUploadResource} from "@/components/upload/upload";
+import {createUploadResource, uploadChunks} from "@/components/upload/upload";
 import {createResourceResponse, resourceOptions, FileMetadataType} from "@/components/upload/type";
 import { handleApiError } from "@/lib/api/handleApirError";
+import { CHUNK_SIZE } from "./constants";
 
 
 export default function FileUpload() {
@@ -33,7 +34,7 @@ export default function FileUpload() {
     // function to handle file upload click
     async function handleFileUpload(){
         const totalbyte = file?.size.toString() ?? "0";
-        const chunksize = 2* 1024 * 1024;
+        const chunksize = CHUNK_SIZE;
         const totalchunks = Number(totalbyte)/chunksize;
         const filename = file?.name ?? "";
 
@@ -46,6 +47,15 @@ export default function FileUpload() {
 
         try {
             const data: createResourceResponse= await createUploadResource(options);
+
+            const res = await uploadChunks({
+                chunk:file?.slice(0, CHUNK_SIZE)!,
+                offset:0
+            });
+
+            console.log("response is: ", res);
+            setFile(null);
+            setFileMetadata(null);
 
         } catch (error) {
             handleApiError(error)

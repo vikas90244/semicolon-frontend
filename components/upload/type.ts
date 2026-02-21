@@ -5,6 +5,10 @@ export interface resourceOptions{
     chunksize: number;
 };
 
+export interface resourceUploadOption {
+    chunk:Blob,
+    offset:number
+}
 export interface createResourceResponse{
     upload_id:string;
     upload_url:string;
