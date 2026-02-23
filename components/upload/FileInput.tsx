@@ -6,18 +6,26 @@ import {createUploadResource, uploadChunks, uploadFile} from "@/components/uploa
 import {createResourceResponse, resourceOptions, FileMetadataType} from "@/components/upload/type";
 import { handleApiError } from "@/lib/api/handleApirError";
 import { CHUNK_SIZE } from "./constants";
+import { BiErrorCircle } from "react-icons/bi";
 
 
 export default function FileUpload() {
 
     const [fileMetadata, setFileMetadata] = useState<FileMetadataType | null>(null);
     const [file, setFile] = useState<File|null>(null);
+    const [error, setError] = useState<string|null>(null);
+
     function handleFileChange(
         e: React.ChangeEvent<HTMLInputElement>
     ) {
-
+        setError(null);
 
         const selectedFile = e.target.files?.[0] ?? null;
+
+        if(selectedFile?.size! > 2*1000*1000*1000) {
+            setError("size is larger than 2GB");
+            return null
+        };
         setFile(selectedFile);
 
         if (selectedFile) {
@@ -33,6 +41,7 @@ export default function FileUpload() {
 
     // function to handle file upload click
     async function handleFileUpload(){
+
         const totalbyte = file?.size.toString() ?? "0";
         const chunksize = CHUNK_SIZE;
         const totalchunks = Number(totalbyte)/chunksize;
@@ -137,7 +146,9 @@ export default function FileUpload() {
 
 
                 )}
-
+                {error&& (<div className="border border-red-500 text-red-500 rounded-md flex gap-2 py-2 items-center px-2 text-sm font-semibold"> 
+                    <BiErrorCircle size={20} /> {error}
+                </div>)}
                 {fileMetadata && (
                     <button
                         className="w-full rounded-lg

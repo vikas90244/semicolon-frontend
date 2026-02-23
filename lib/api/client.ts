@@ -1,5 +1,4 @@
 import { getSession } from "next-auth/react";
-import { BACKEND_URI } from "../uri";
 import { ApiResponse } from "../types";
 import { ApiException } from "./exception";
 
