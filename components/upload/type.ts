@@ -7,7 +7,9 @@ export interface resourceOptions{
 
 export interface resourceUploadOption {
     chunk:Blob,
-    offset:number
+    offset:number,
+    uploadId: string;
+    filename:string;
 }
 export interface createResourceResponse{
     upload_id:string;
