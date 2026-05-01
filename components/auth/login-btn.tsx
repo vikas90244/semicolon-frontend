@@ -1,9 +1,11 @@
 "use client";
 import { useSession, signIn, signOut } from "next-auth/react"
 import Image from "next/image";
+import { useRouter } from "next/navigation";
 
 export default function Component({cls}:{cls:string}) {
-  const { data: session } = useSession()
+  const { data: session } = useSession();
+  const router = useRouter();
   if (session) {
     return (
       <>
@@ -28,7 +30,7 @@ export default function Component({cls}:{cls:string}) {
     <>
       <button
           className="bg-rose-400 px-3 py-1  hover:text-white  hover:bg-rose-500 transition-all focus:outline-none rounded-sm text-sm font-semibold cursor-pointer"
-          onClick={() => signIn()}>Sign in</button>
+          onClick={() => router.push('/login')}>Sign in</button>
     </>
   )
 }

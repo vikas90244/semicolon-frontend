@@ -22,3 +22,12 @@ export interface FileMetadataType {
     fileSize: number;
 };
 
+export interface PendingUpload {
+    upload_id: string;
+    filename: string;
+    size: number;
+    offset: number;
+    status: "PENDING" | "UPLOADING" | "COMPLETED" | "FAILED";
+    created_at: string;
+};
+
