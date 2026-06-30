@@ -5,9 +5,9 @@ function required(name: string, val?: string) {
 }
 
 // For client-side code in Next.js, env vars must be prefixed with NEXT_PUBLIC_
-export const BACKEND_URI = process.env.NEXT_PUBLIC_BACKEND_POINT ?? "";
+export const BACKEND_URI = process.env.NEXT_PUBLIC_BACKEND_URL ?? "http://localhost:8000";
 
 // Optional helper to assert presence during app startup (server-side usage)
 export function getRequiredBackendUri() {
-	return required("NEXT_PUBLIC_BACKEND_POINT", BACKEND_URI);
+	return required("NEXT_PUBLIC_BACKEND_URL", BACKEND_URI);
 }

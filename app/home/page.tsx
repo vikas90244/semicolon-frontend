@@ -1,17 +1,13 @@
-import { getServerSession } from "next-auth";
-import { redirect } from "next/navigation";
-import { authOptions } from "@/lib/auth";
 import FileUpload from "@/components/upload/FileInput";
 import PendingUploads from "@/components/upload/PendingUploads";
+import CompletedUploads from "@/components/upload/CompletedUploads";
 
-async function page() {
-  const session = await getServerSession(authOptions);
-  if (!session) redirect("/");
-
+function page() {
   return (
     <div className="mx-auto max-w-xl py-10">
       <FileUpload />
       <PendingUploads />
+      <CompletedUploads />
     </div>
   );
 }

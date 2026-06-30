@@ -1,24 +1,20 @@
-import { getSession } from "next-auth/react";
 import { ApiResponse } from "../types";
 import { ApiException } from "./exception";
 
+const BACKEND_URL = process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:8000';
 
 export async function apiClient<T> (
     URL:string,
     options?:RequestInit
 ): Promise<T> {
-
-    const session = await getSession();
-    const token = session?.accessToken;
-
-    const res = await fetch(`${URL}`, {
+    const res = await fetch(`${BACKEND_URL}${URL}`, {
         ...options,
+        credentials: 'include', // Send cookies automatically
         headers: {
             ...(options?.headers||{}),
-            ...(token? {Authorization: `Bearer ${token}`}:{}),
             ...(options?.body instanceof Blob ? {}: {"Content-Type":"application/json"}),
         }
-    })
+    });
 
     const json:ApiResponse<T> = await res.json();
 

@@ -19,11 +19,12 @@ export const uploadChunks = async ({chunk, offset, filename, uploadId}: resource
   const res = await fetch(UPLOAD_RESOURCE, {
     method: "PATCH",
     body:chunk,
+    credentials: 'include', // Send cookies automatically
     headers:{
       "Upload-Offset": offset.toString(),
       "Content-Type": "application/offset+octet-stream",
       "Upload-Id": uploadId,
-      "Upload-Metadata": `filename ${filename}`
+      "Upload-Metadata": `filename ${filename}`,
     }
   });
    if(!res.ok) throw new Error("Chunk upload failed");
@@ -77,6 +78,13 @@ export async function resumeUpload(file: File, uploadId: string, fromOffset: num
  */
 
 export const fetchPendingUploads = async (): Promise<PendingUpload[]> => {
-  const data = await apiClient<{ failed_uploads: PendingUpload[] }>(FAILED_UPLOADS_RESOURCE);
-  return data.failed_uploads;
+  try {
+    console.log('Fetching pending uploads from:', FAILED_UPLOADS_RESOURCE);
+    const data = await apiClient<{ failed_uploads: PendingUpload[] }>(FAILED_UPLOADS_RESOURCE);
+    console.log('Pending uploads response:', data);
+    return data.failed_uploads;
+  } catch (error) {
+    console.error('Error fetching pending uploads:', error);
+    throw error;
+  }
 };

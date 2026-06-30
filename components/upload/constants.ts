@@ -1,6 +1,10 @@
 import { BACKEND_URI } from "@/lib/uri";
 
-export const CREATE_RESOURCE = `${BACKEND_URI}/api/upload/init`;
-export const CHUNK_SIZE= 2* 1024 * 1024;
+// For apiClient (adds BACKEND_URL automatically)
+export const CREATE_RESOURCE = `/api/upload/init`;
+export const FAILED_UPLOADS_RESOURCE = `/api/upload/failed-upload`;
+
+// For raw fetch (needs full URL)
 export const UPLOAD_RESOURCE = `${BACKEND_URI}/api/upload/receive-chunks`;
-export const FAILED_UPLOADS_RESOURCE = `${BACKEND_URI}/api/upload/failed-upload`;
+
+export const CHUNK_SIZE = 2 * 1024 * 1024;

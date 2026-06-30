@@ -14,6 +14,16 @@ export default function FileUpload() {
     const [fileMetadata, setFileMetadata] = useState<FileMetadataType | null>(null);
     const [file, setFile] = useState<File|null>(null);
     const [error, setError] = useState<string|null>(null);
+    
+    // Validation constants (matching backend)
+    const MAX_FILE_SIZE = 500 * 1024 * 1024; // 500MB
+    const ALLOWED_EXTENSIONS = [
+        '.pdf', '.doc', '.docx', '.txt', '.csv',
+        '.jpg', '.jpeg', '.png', '.gif', '.webp', '.svg',
+        '.mp4', '.avi', '.mov', '.mkv', '.webm',
+        '.mp3', '.wav', '.flac', '.ogg',
+        '.zip', '.rar', '.7z', '.tar', '.gz',
+    ];
 
     function handleFileChange(
         e: React.ChangeEvent<HTMLInputElement>
@@ -21,21 +31,44 @@ export default function FileUpload() {
         setError(null);
 
         const selectedFile = e.target.files?.[0] ?? null;
-
-        if(selectedFile?.size! > 2*1000*1000*1000) {
-            setError("size is larger than 2GB");
-            return null
-        };
-        setFile(selectedFile);
-
-        if (selectedFile) {
-            setFileMetadata({
-                fileName: selectedFile.name,
-                fileSize: selectedFile.size,
-            });
-        } else {
+        
+        if (!selectedFile) {
+            setFile(null);
             setFileMetadata(null);
+            return;
         }
+
+        // Validate file size
+        if (selectedFile.size > MAX_FILE_SIZE) {
+            setError(`File too large. Maximum size is ${MAX_FILE_SIZE / (1024*1024)}MB`);
+            return;
+        }
+        
+        if (selectedFile.size === 0) {
+            setError("File is empty");
+            return;
+        }
+        
+        // Validate file extension
+        const fileName = selectedFile.name.toLowerCase();
+        const fileExt = '.' + fileName.split('.').pop();
+        
+        if (!ALLOWED_EXTENSIONS.includes(fileExt)) {
+            setError(`File type '${fileExt}' not allowed. Allowed: ${ALLOWED_EXTENSIONS.join(', ')}`);
+            return;
+        }
+        
+        // Validate filename length
+        if (selectedFile.name.length > 255) {
+            setError("Filename too long (max 255 characters)");
+            return;
+        }
+        
+        setFile(selectedFile);
+        setFileMetadata({
+            fileName: selectedFile.name,
+            fileSize: selectedFile.size,
+        });
     }
 
 
@@ -121,7 +154,7 @@ export default function FileUpload() {
                     </p>
 
                     <p className="mt-1 text-xs hidden md:block text-gray-400">
-                        Maximum file size: 5MB
+                        Maximum file size: 500MB
                     </p>
 
                     <input

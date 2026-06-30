@@ -1,4 +1,3 @@
-import { signIn } from "next-auth/react";
 import { toast } from "sonner";
 import { ApiException } from "./exception";
 export function handleApiError(error: unknown) {
@@ -10,7 +9,6 @@ export function handleApiError(error: unknown) {
 
   switch (error.code) {
     case "UNAUTHORIZED":
-      signIn();
       break;
 
     case "FORBIDDEN":
