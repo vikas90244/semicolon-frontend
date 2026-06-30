@@ -16,7 +16,10 @@ export const createUploadResource = async (options: resourceOptions)=>{
  * PATCH request used to upload resource.
 ***/
 export const uploadChunks = async ({chunk, offset, filename, uploadId}: resourceUploadOption) =>{
-  const res = await fetch(UPLOAD_RESOURCE, {
+  // Build URL with upload_id in path
+  const uploadUrl = `${UPLOAD_RESOURCE}/${uploadId}/`;
+  
+  const res = await fetch(uploadUrl, {
     method: "PATCH",
     body:chunk,
     credentials: 'include', // Send cookies automatically
