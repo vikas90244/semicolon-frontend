@@ -38,24 +38,34 @@ export const uploadChunks = async ({chunk, offset, filename, uploadId}: resource
 
 
 /***
- * Function to initiate File Upload
+ * Function to initiate File Upload with progress tracking
 ***/
-export async function uploadFile(file: File, uploadId: string) {
+export async function uploadFile(
+  file: File, 
+  uploadId: string,
+  onProgress?: (progress: number, uploaded: number, total: number) => void
+) {
   let offset = 0;
   const chunkSize = CHUNK_SIZE;
   const filename = btoa(file.name);
+  const totalSize = file.size;
 
-  while (offset < file.size) {
+  while (offset < totalSize) {
     console.log('offset is: ', offset);
-    console.log("file size is: ", file.size);
+    console.log("file size is: ", totalSize);
     const chunk = file.slice(offset, offset + chunkSize);
 
     try {
       offset = await uploadChunks({chunk, offset, filename, uploadId});
       
-      console.log("offset is: ", offset);
+      // Calculate and report progress
+      const progress = Math.min(100, Math.round((offset / totalSize) * 100));
+      if (onProgress) {
+        onProgress(progress, offset, totalSize);
+      }
+      
+      console.log("offset is: ", offset, "progress:", progress + "%");
     } catch (err) {
-
       throw err;
     }
   }

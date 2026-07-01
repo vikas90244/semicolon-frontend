@@ -14,6 +14,10 @@ export default function FileUpload() {
     const [fileMetadata, setFileMetadata] = useState<FileMetadataType | null>(null);
     const [file, setFile] = useState<File|null>(null);
     const [error, setError] = useState<string|null>(null);
+    const [uploading, setUploading] = useState(false);
+    const [uploadProgress, setUploadProgress] = useState(0);
+    const [uploadedBytes, setUploadedBytes] = useState(0);
+    const [totalBytes, setTotalBytes] = useState(0);
     
     // Validation constants (matching backend)
     const MAX_FILE_SIZE = 500 * 1024 * 1024; // 500MB
@@ -74,6 +78,9 @@ export default function FileUpload() {
 
     // function to handle file upload click
     async function handleFileUpload(){
+        setUploading(true);
+        setUploadProgress(0);
+        setError(null);
 
         const totalbyte = file?.size.toString() ?? "0";
         const chunksize = CHUNK_SIZE;
@@ -90,17 +97,28 @@ export default function FileUpload() {
         try {
             const data: createResourceResponse= await createUploadResource(options);
             const uploadId= data.upload_id;
-            const res = await uploadFile(
+            
+            // Upload with progress tracking
+            await uploadFile(
                 file!,
-                uploadId
+                uploadId,
+                (progress, uploaded, total) => {
+                    setUploadProgress(progress);
+                    setUploadedBytes(uploaded);
+                    setTotalBytes(total);
+                }
             )
 
-            console.log("response is: ", res);
+            console.log("Upload completed successfully");
             setFile(null);
             setFileMetadata(null);
+            setUploadProgress(0);
 
         } catch (error) {
-            handleApiError(error)
+            console.error("Upload error:", error);
+            setError("Upload failed. Please try again.");
+        } finally {
+            setUploading(false);
         }
     }
 
@@ -182,7 +200,27 @@ export default function FileUpload() {
                 {error&& (<div className="border border-red-500 text-red-500 rounded-md flex gap-2 py-2 items-center px-2 text-sm font-semibold"> 
                     <BiErrorCircle size={20} /> {error}
                 </div>)}
-                {fileMetadata && (
+                
+                {/* Progress Bar */}
+                {uploading && (
+                    <div className="space-y-2">
+                        <div className="flex justify-between text-xs text-gray-600 dark:text-gray-400">
+                            <span>Uploading...</span>
+                            <span>{uploadProgress}%</span>
+                        </div>
+                        <div className="h-2 w-full rounded-full bg-gray-200 dark:bg-gray-700 overflow-hidden">
+                            <div 
+                                className="h-full bg-gradient-to-r from-indigo-500 to-purple-600 transition-all duration-300 ease-out"
+                                style={{ width: `${uploadProgress}%` }}
+                            />
+                        </div>
+                        <div className="text-xs text-center text-gray-500 dark:text-gray-400">
+                            {(uploadedBytes / (1024 * 1024)).toFixed(1)} MB / {(totalBytes / (1024 * 1024)).toFixed(1)} MB
+                        </div>
+                    </div>
+                )}
+                
+                {fileMetadata && !uploading && (
                     <button
                         className="w-full rounded-lg
                        bg-gradient-to-r
@@ -197,6 +235,21 @@ export default function FileUpload() {
                         onClick={handleFileUpload}
                     >
                         Upload Now
+                    </button>
+                )}
+                
+                {uploading && (
+                    <button
+                        disabled
+                        className="w-full rounded-lg
+                       bg-gray-400
+                       px-3 py-2
+                       text-sm font-medium text-white
+                       shadow
+                       cursor-not-allowed
+                       opacity-60"
+                    >
+                        Uploading...
                     </button>
                 )}
 
