@@ -96,14 +96,35 @@ export async function uploadFile(
 /***
  * Resume a previously interrupted upload from its saved offset
 ***/
-export async function resumeUpload(file: File, uploadId: string, fromOffset: number) {
+export async function resumeUpload(
+  file: File, 
+  uploadId: string, 
+  fromOffset: number,
+  onProgress?: (progress: number, uploaded: number, total: number) => void
+) {
   let offset = fromOffset;
   const chunkSize = CHUNK_SIZE;
   const filename = btoa(file.name);
+  const totalSize = file.size;
 
-  while (offset < file.size) {
+  while (offset < totalSize) {
+    console.log('Resume offset is: ', offset);
+    console.log("Total file size is: ", totalSize);
     const chunk = file.slice(offset, offset + chunkSize);
-    offset = await uploadChunks({ chunk, offset, filename, uploadId });
+
+    try {
+      offset = await uploadChunks({ chunk, offset, filename, uploadId });
+      
+      // Calculate and report progress
+      const progress = Math.min(100, Math.round((offset / totalSize) * 100));
+      if (onProgress) {
+        onProgress(progress, offset, totalSize);
+      }
+      
+      console.log("Resume offset is: ", offset, "progress:", progress + "%");
+    } catch (err) {
+      throw err;
+    }
   }
 }
 

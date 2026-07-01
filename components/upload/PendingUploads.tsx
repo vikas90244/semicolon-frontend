@@ -27,6 +27,8 @@ function UploadCard({ upload, onDone }: { upload: PendingUpload; onDone: () => v
   const [progress, setProgress] = useState(
     upload.size > 0 ? Math.round((upload.offset / upload.size) * 100) : 0
   );
+  const [uploadedBytes, setUploadedBytes] = useState(upload.offset);
+  const [totalBytes, setTotalBytes] = useState(upload.size);
   const [error, setError] = useState<string | null>(null);
   const [done, setDone] = useState(upload.status === "COMPLETED");
 
@@ -45,7 +47,16 @@ function UploadCard({ upload, onDone }: { upload: PendingUpload; onDone: () => v
     setUploading(true);
     setError(null);
     try {
-      await resumeUpload(file, upload.upload_id, upload.offset);
+      await resumeUpload(
+        file, 
+        upload.upload_id, 
+        upload.offset,
+        (progress, uploaded, total) => {
+          setProgress(progress);
+          setUploadedBytes(uploaded);
+          setTotalBytes(total);
+        }
+      );
       setProgress(100);
       setDone(true);
       setTimeout(onDone, 800);
@@ -75,13 +86,22 @@ function UploadCard({ upload, onDone }: { upload: PendingUpload; onDone: () => v
       </div>
 
       {/* progress bar */}
-      <div className="h-1.5 w-full overflow-hidden rounded-full bg-zinc-800">
-        <div
-          className="h-full rounded-full bg-gradient-to-r from-indigo-500 to-violet-500 transition-all duration-300"
-          style={{ width: `${progress}%` }}
-        />
+      <div className="space-y-1">
+        <div className="h-1.5 w-full overflow-hidden rounded-full bg-zinc-800">
+          <div
+            className="h-full rounded-full bg-gradient-to-r from-indigo-500 to-violet-500 transition-all duration-300"
+            style={{ width: `${progress}%` }}
+          />
+        </div>
+        <div className="flex justify-between items-center">
+          <p className="text-xs text-zinc-600">{progress}%</p>
+          {uploading && (
+            <p className="text-xs text-zinc-600">
+              {formatBytes(uploadedBytes)} / {formatBytes(totalBytes)}
+            </p>
+          )}
+        </div>
       </div>
-      <p className="text-right text-xs text-zinc-600">{progress}%</p>
 
       {/* file picker + resume */}
       {!done && (
