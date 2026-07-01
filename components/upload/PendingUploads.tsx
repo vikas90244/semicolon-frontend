@@ -31,6 +31,7 @@ function UploadCard({ upload, onDone }: { upload: PendingUpload; onDone: () => v
   const [totalBytes, setTotalBytes] = useState(upload.size);
   const [error, setError] = useState<string | null>(null);
   const [done, setDone] = useState(upload.status === "COMPLETED");
+  const [, forceUpdate] = useState({});  // Force re-render trigger
 
   function handleFileChange(e: React.ChangeEvent<HTMLInputElement>) {
     const f = e.target.files?.[0] ?? null;
@@ -52,15 +53,19 @@ function UploadCard({ upload, onDone }: { upload: PendingUpload; onDone: () => v
         upload.upload_id, 
         upload.offset,
         (progress, uploaded, total) => {
+          console.log('Resume progress:', { progress, uploaded, total });
           setProgress(progress);
           setUploadedBytes(uploaded);
           setTotalBytes(total);
+          forceUpdate({});  // Force component re-render
         }
       );
       setProgress(100);
+      setUploadedBytes(totalBytes);
       setDone(true);
       setTimeout(onDone, 800);
-    } catch {
+    } catch (error) {
+      console.error('Resume error:', error);
       setError("Resume failed. Try again.");
     } finally {
       setUploading(false);
@@ -74,7 +79,7 @@ function UploadCard({ upload, onDone }: { upload: PendingUpload; onDone: () => v
         <div className="min-w-0">
           <p className="truncate text-sm font-medium text-zinc-200">{upload.filename}</p>
           <p className="mt-0.5 text-xs text-zinc-500">
-            {formatBytes(upload.offset)} of {formatBytes(upload.size)} · {formatDate(upload.created_at)}
+            {formatBytes(uploading ? uploadedBytes : upload.offset)} of {formatBytes(uploading ? totalBytes : upload.size)} · {formatDate(upload.created_at)}
           </p>
         </div>
         <span className={`shrink-0 rounded-full border px-2 py-0.5 text-xs font-medium
@@ -94,8 +99,13 @@ function UploadCard({ upload, onDone }: { upload: PendingUpload; onDone: () => v
           />
         </div>
         <div className="flex justify-between items-center">
-          <p className="text-xs text-zinc-600">{progress}%</p>
+          <p className="text-xs text-zinc-500">{progress}%</p>
           {uploading && (
+            <p className="text-xs text-zinc-500">
+              {formatBytes(uploadedBytes)} / {formatBytes(totalBytes)}
+            </p>
+          )}
+          {!uploading && !done && (
             <p className="text-xs text-zinc-600">
               {formatBytes(uploadedBytes)} / {formatBytes(totalBytes)}
             </p>
