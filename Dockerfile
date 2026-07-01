@@ -1,5 +1,5 @@
-# Frontend Dockerfile
-FROM node:20-alpine AS base
+# Frontend Dockerfile - Using Debian-based image for better compatibility
+FROM node:20-slim AS base
 
 # Install dependencies only when needed
 FROM base AS deps
@@ -9,7 +9,7 @@ WORKDIR /app
 COPY package.json package-lock.json* ./
 
 # Install dependencies
-RUN npm ci
+RUN npm install --production=false
 
 # Rebuild the source code only when needed
 FROM base AS builder
@@ -32,8 +32,8 @@ WORKDIR /app
 ENV NODE_ENV=production
 
 # Create nextjs user
-RUN addgroup --system --gid 1001 nodejs
-RUN adduser --system --uid 1001 nextjs
+RUN groupadd --system --gid 1001 nodejs
+RUN useradd --system --uid 1001 nextjs
 
 # Copy necessary files
 COPY --from=builder /app/public ./public
