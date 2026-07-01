@@ -13,27 +13,48 @@ export const createUploadResource = async (options: resourceOptions)=>{
 
 
 /***
- * PATCH request used to upload resource.
+ * PATCH request used to upload resource with retry logic.
 ***/
-export const uploadChunks = async ({chunk, offset, filename, uploadId}: resourceUploadOption) =>{
+export const uploadChunks = async ({chunk, offset, filename, uploadId}: resourceUploadOption, retries = 3) =>{
   // Build URL with upload_id in path
   const uploadUrl = `${UPLOAD_RESOURCE}/${uploadId}/`;
   
-  const res = await fetch(uploadUrl, {
-    method: "PATCH",
-    body:chunk,
-    credentials: 'include', // Send cookies automatically
-    headers:{
-      "Upload-Offset": offset.toString(),
-      "Content-Type": "application/offset+octet-stream",
-      "Upload-Id": uploadId,
-      "Upload-Metadata": `filename ${filename}`,
+  for (let attempt = 0; attempt < retries; attempt++) {
+    try {
+      const res = await fetch(uploadUrl, {
+        method: "PATCH",
+        body: chunk,
+        credentials: 'include',
+        headers: {
+          "Upload-Offset": offset.toString(),
+          "Content-Type": "application/offset+octet-stream",
+          "Upload-Id": uploadId,
+          "Upload-Metadata": `filename ${filename}`,
+        }
+      });
+      
+      if (!res.ok) {
+        throw new Error(`Chunk upload failed: ${res.status}`);
+      }
+      
+      const uploadOffset = Number(res.headers.get("Upload-Offset"));
+      console.log("uploadOffset in the upload chunk function: ", uploadOffset);
+      return uploadOffset;
+      
+    } catch (error) {
+      console.error(`Upload attempt ${attempt + 1} failed:`, error);
+      
+      // If last attempt, throw error
+      if (attempt === retries - 1) {
+        throw error;
+      }
+      
+      // Wait before retry (exponential backoff)
+      await new Promise(resolve => setTimeout(resolve, 1000 * (attempt + 1)));
     }
-  });
-   if(!res.ok) throw new Error("Chunk upload failed");
-   const uploadOffset =  Number(res.headers.get("Upload-Offset"));
-   console.log("uploadOffset in the upload chunk function: ", uploadOffset);
-  return uploadOffset;
+  }
+  
+  throw new Error("Upload failed after retries");
 }
 
 
