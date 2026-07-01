@@ -30,7 +30,7 @@ export default function Page() {
 
       <div className="mt-10 flex flex-col sm:flex-row gap-3">
         <Link
-          href="/login"
+          href="/home"
           className="bg-zinc-100 text-zinc-900 font-medium px-5 py-2.5 rounded-md hover:bg-white transition-colors text-sm text-center"
         >
           Try it out
